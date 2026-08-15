@@ -2,6 +2,9 @@
 # Импортируем модуль socket для работы с сокетами
 import socket
 
+from server.protocol import parse_command
+from server.router import route_command
+
 # Создаем TCP-серверный сокет
 tcpserver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -15,11 +18,6 @@ tcpserver.listen(1024)
 client_socket, client_address = tcpserver.accept()
 # Инициализируем буфер для хранения данных
 buffer = ""
-
-#========= Функция для определения типа команды и данных команды ==============
-def types_finder(data):
-    type_of_command, command_data = data.split(":", 1)
-    return type_of_command, command_data
 
 #==========================================================================================
 #===================Основной цикл обработки данных от клиента==============================
@@ -43,9 +41,18 @@ while True:
         buffer = buffer[startdec + 1:]
         
         # Определяем тип команды и данные команды с помощью функции types_finder
-        type_of_command, command_data = types_finder(pr_data)
+        try:
+            command_type, command_data = parse_command(pr_data)
+        except ValueError as error:
+            print(f"Ошибка команды: {error}")
+            break
+
         # Выводим информацию о полученных данных
-        print(f"Пришло от {client_address} \n Тип команды: {type_of_command} \n Данные команды: {command_data}")
+        print(f"СЕРВЕР\nПришло от {client_address} \n Тип команды: {command_type} \n Данные команды: {command_data}")
+
+        # Перенапрвление команды
+        route_command(command_type, command_data)
+
         # Если полученные данные равны "exit", закрываем соединение и сервер
         if pr_data.lower() == "exit":
             client_socket.close()

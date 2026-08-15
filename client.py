@@ -4,7 +4,7 @@ import socket
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(('127.0.0.1', 8080))
 
-client.send("Hello\nWorld\nTest\n".encode("utf-8"))
+client.send("KEY:mouse\nMOUSE:test\nTEXT:g\n".encode("utf-8"))
 
 while True:
     message = input("Введите сообщение для сервера (или 'exit' для выхода): ")
