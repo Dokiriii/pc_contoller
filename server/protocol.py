@@ -1,16 +1,30 @@
-# serve/protocol.py
+# server/protocol.py
+
+import json
 
 # Функция оразделения типа и назначения команды, используется в server.py
 def parse_command(data):
-    if ":" not in data:
-        raise ValueError("В команде отсутствует разделитель ':'")
+    try:
+        command = json.loads(data)
 
-    command_type, command_data = data.split(":", 1)
+    except json.JSONDecodeError as error:
+        raise ValueError(
+            f"Некорректный JSON: {error}"
+        )
 
-    if not command_type:
-        raise ValueError("Не указан тип команды")
+    if not isinstance(command, dict):
+        raise ValueError(
+            "Команда должна быть JSON-объектом"
+        )
 
-    if not command_data:
-        raise ValueError("Отсутствуют данные команды")
+    if "type" not in command:
+        raise ValueError(
+            "Отсутствует поле 'type'"
+        )
 
-    return command_type, command_data
+    if "action" not in command:
+        raise ValueError(
+            "Отсутствует поле 'action'"
+        )
+
+    return command

@@ -2,61 +2,75 @@
 # Импортируем модуль socket для работы с сокетами
 import socket
 
+from server.connection import Connection, ConnectionContext
 from server.protocol import parse_command
 from server.router import route_command
 
-# Создаем TCP-серверный сокет
+
 tcpserver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Устанавливаем адрес и порт для сервера
-server_address = ('127.0.0.1', 8080)
+server_address = ("127.0.0.1", 8080)
+
 tcpserver.bind(server_address)
-
-# Начинаем прослушивание входящих соединений
 tcpserver.listen(1024)
-# Принимаем входящее соединение от клиента
+
+print("Сервер запущен. Ожидание подключения...")
+
 client_socket, client_address = tcpserver.accept()
-# Инициализируем буфер для хранения данных
-buffer = ""
 
-#==========================================================================================
-#===================Основной цикл обработки данных от клиента==============================
-#==========================================================================================
+print(f"Клиент подключился: {client_address}")
+
+
+context = ConnectionContext(
+    server_socket=tcpserver,
+    client_socket=client_socket,
+    client_address=client_address
+)
+
+connection = Connection(context)
+
+
 while True:
-    # Получаем данные от клиента
-    data = client_socket.recv(1024)
 
-    if not data:
+    # Вызываем метод получения и сборки команд из буфера сокета
+    commands = connection.receive_commands()
+
+    # Если метод вернул None, значит клиент физически разорвал соединение
+    if commands is None:
+        print("Клиент отключился")
         break
-    # Декодируем данные из байтов в строку UTF-8 и добавляем их в буфер
-    utf_8_data = data.decode('utf-8')
-    buffer += utf_8_data
 
-    # Ищем символ новой строки в буфере
-    startdec = buffer.find("\n")
+    # ОБРАБОТКА ПАКЕТА КОМАНД (Конструкция FOR-ELSE)
+    # Перебираем все готовые строковые команды, которые удалось извлечь из буфера
+    for raw_command in commands:
 
-    # Если символ новой строки найден, обрабатываем данные до него
-    while startdec != -1:
-        pr_data = buffer[:startdec]
-        buffer = buffer[startdec + 1:]
-        
-        # Определяем тип команды и данные команды с помощью функции types_finder
         try:
-            command_type, command_data = parse_command(pr_data)
+            # Пытаемся распарсить сырую строку в Python-словарь (JSON)
+            command = parse_command(raw_command)
+
         except ValueError as error:
             print(f"Ошибка команды: {error}")
+            continue
+
+        print(f"\nСЕРВЕР")
+        print(f"Пришло от: {client_address}")
+        print(f"Команда: {command}")
+
+        # Отправляем команду в роутер для исполнения. 
+        # Роутер вернет True, если это команда закрытия сервера (SYSTEM_COMMAND)
+        should_stop = route_command(command, context)
+
+        if should_stop:
             break
 
-        # Выводим информацию о полученных данных
-        print(f"СЕРВЕР\nПришло от {client_address} \n Тип команды: {command_type} \n Данные команды: {command_data}")
+    # Этот блок относится к циклу FOR. Он срабатывает ТОЛЬКО если цикл FOR
+    # завершился штатно (перебрал все элементы) или если список commands был ПУСТЫМ [].
+    # То есть, если НЕ сработал внутренний экстренный 'break' (не было команды закрытия).       
+    else:
+        continue
+    # Сюда код попадает только в одном случае: если цикл FOR был прерван через 'break' 
+    # (сработал флаг should_stop).
+    break
 
-        # Перенапрвление команды
-        route_command(command_type, command_data)
 
-        # Если полученные данные равны "exit", закрываем соединение и сервер
-        if pr_data.lower() == "exit":
-            client_socket.close()
-            tcpserver.close()
-            break
-        # Ищем следующий символ новой строки в буфере
-        startdec = buffer.find("\n")
+connection.close()
