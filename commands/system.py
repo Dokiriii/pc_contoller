@@ -1,10 +1,10 @@
 # commands_system.py
+from core.command_result import CommandResult
 
 # Функция закрытия соединения
-def close_connections(context):
+def shutdown_server(context):
     print("[System] Закрытие соединений...")
-
-    context.client_socket.close()
-    context.server_socket.close()
-
-    return True
+    return CommandResult(
+        success=True,
+        should_stop=True
+    )

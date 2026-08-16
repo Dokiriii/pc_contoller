@@ -5,6 +5,29 @@ import json
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(('127.0.0.1', 8080))
 
+buffer = ""
+
+# Функция получения ответа с сервера
+def receive_responses():
+    global buffer
+
+    data = client.recv(1024)
+
+    if not data:
+        return None
+
+    buffer += data.decode("utf-8")
+
+    responses = []
+
+    while "\n" in buffer:
+        response, buffer = buffer.split("\n", 1)
+
+        if response:
+            responses.append(response)
+
+    return responses
+
 
 # ТЕСТ
 import time
@@ -30,22 +53,49 @@ client.send(part2.encode('utf-8'))
 # {"type":"KEY"
 
 # КОМАНДА ВЫХОДА
-# {"type": "SYSTEM_COMMAND", "action": "close_conn"}
+# {"type": "SYSTEM_COMMAND", "action": "shutdown"}
 
 while True:
-    user_input = input("Введите сообщение для сервера (или 'exit' для выхода): ")
+    user_input = input("Введите сообщение для сервера: ")
+
+    if user_input == "exit":
+        exit_command = {
+            "type": "SYSTEM_COMMAND",
+            "action": "shutdown"
+        }
+
+        message = json.dumps(exit_command) + "\n"
+        client.sendall(message.encode("utf-8"))
+
+        print("[Client] Отправлена команда закрытия. Выходим...")
+        break
 
     try:
-        # Сначала превращаем введенную строку в реальный Python-словарь
         command_dict = json.loads(user_input)
-        
-        # Теперь упаковываем этот словарь в чистый JSON-формат для отправки
-        message = json.dumps(command_dict, ensure_ascii=False) + "\n"
-        client.send(message.encode('utf-8'))
 
-        if command_dict.get("action") == "close_conn":
-            print("[Client] Отправлена команда закрытия. Выходим...")
-            break
-        
     except json.JSONDecodeError:
-        print("Ошибка: Вы ввели некорректный JSON! Попробуйте еще раз.")
+        print("Ошибка: Вы ввели некорректный JSON!")
+        continue
+
+    message = json.dumps(
+        command_dict,
+        ensure_ascii=False
+    ) + "\n"
+
+    client.sendall(message.encode("utf-8"))
+
+    responses = receive_responses()
+
+    if responses is None:
+        print("[Client] Сервер отключился")
+        break
+
+    for raw_response in responses:
+        try:
+            response = json.loads(raw_response)
+
+        except json.JSONDecodeError:
+            print(f"[Client] Получен некорректный ответ: {raw_response}")
+            continue
+
+        print(f"\n[Client] Ответ сервера: {response}")

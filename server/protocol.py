@@ -17,6 +17,12 @@ def parse_command(data):
             "Команда должна быть JSON-объектом"
         )
 
+    if not isinstance(command["type"], str):
+        raise ValueError("Поле 'type' должно быть строкой")
+
+    if not isinstance(command["action"], str):
+        raise ValueError("Поле 'action' должно быть строкой")
+
     if "type" not in command:
         raise ValueError(
             "Отсутствует поле 'type'"

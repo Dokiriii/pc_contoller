@@ -56,11 +56,19 @@ while True:
         print(f"Пришло от: {client_address}")
         print(f"Команда: {command}")
 
-        # Отправляем команду в роутер для исполнения. 
-        # Роутер вернет True, если это команда закрытия сервера (SYSTEM_COMMAND)
-        should_stop = route_command(command, context)
+        # Отправляем команду в роутер для исполнения. Команда возвращает результат
+        # выполнения команды.
+        result = route_command(command, context)
 
-        if should_stop:
+        # Отправляем результат выполнения команды на клиент
+        connection.send_response({
+            "type": "RESPONSE",
+            "status": "ok" if result.success else "error",
+            "message": result.message
+        })
+
+        # Если should_stop в результате выполнения команды равен True, то программа завершает работу
+        if result.should_stop:
             break
 
     # Этот блок относится к циклу FOR. Он срабатывает ТОЛЬКО если цикл FOR

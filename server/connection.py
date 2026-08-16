@@ -1,5 +1,5 @@
 # server/connection.py
-import socket
+import socket, json
 from dataclasses import dataclass
 
 # Создается класс для хранения соктов и другой информации о сервере и клиенте
@@ -25,11 +25,12 @@ class Connection:
         # Декодируем данные
         try:
             decoded_data = data.decode("utf-8")
-        except UnicodeDecodeError:
-            print("Ошибка: получены некорректные UTF-8 данные")
+        except UnicodeDecodeError as error:
+            print(f"Ошибка UTF-8: {error}")
+            self.buffer = ""
             return []
 
-        # Добавляем данные в буфер. Он нужен для случаев, когда из TCP будут приходить
+        # Добавляем данные в буфер. Он нужен для случаев, когда из recv()  будут приходить
         # не полные или разорванные команды. Определяет программа целостность команды с помощью
         # символа "\n". Если его нет, программа не проходит в цикл while и возвращает пустой
         # спсиок модулю сервера, где он проходит цикл for без возврата данных и попадает в else,
@@ -46,6 +47,16 @@ class Connection:
                 commands.append(command)
 
         return commands
+
+    def send_response(self, response):
+        message = json.dumps(
+            response,
+            ensure_ascii=False
+        ) + "\n"
+
+        self.context.client_socket.sendall(
+            message.encode("utf-8")
+        )
 
     def close(self):
         self.context.client_socket.close()

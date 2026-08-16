@@ -1,4 +1,5 @@
 # server/router.py
+from core.command_result import CommandResult
 # Имортируем хэндлеры
 from core.command_handler import (
     keyboard_handler,
@@ -23,6 +24,10 @@ def route_command(command, context):
 
     if handler is None:
         print(f"Неизвестный тип команды: {command_type}")
-        return False
+
+        return CommandResult(
+            success=False,
+            message=f"Неизвестный тип команды: {command_type}"
+        )
 
     return handler(command, context)
