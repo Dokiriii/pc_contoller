@@ -135,3 +135,40 @@ Thumbs.db
 
 # Test_files
 test.py
+
+# =========================
+# Python
+# =========================
+
+server/.venv/
+server/**/__pycache__/
+server/**/*.pyc
+
+# =========================
+# Flutter / Dart
+# =========================
+
+client/.dart_tool/
+client/build/
+client/.flutter-plugins
+client/.flutter-plugins-dependencies
+client/.packages
+
+# =========================
+# IDE
+# =========================
+
+.idea/
+.vscode/
+
+# =========================
+# OS
+# =========================
+
+.DS_Store
+
+# Для Flutter / Dart: игнорируем папки сборки
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
