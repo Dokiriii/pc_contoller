@@ -1,5 +1,6 @@
 # commands/mouse.py
 import pyautogui
+from commands.mouse_input import move_mouse as system_move_mouse
 
 
 def move_mouse(data):
@@ -10,7 +11,7 @@ def move_mouse(data):
         print("[Mouse] Не указаны dx или dy")
         return
 
-    pyautogui.moveRel(dx, dy)
+    system_move_mouse(dx, dy)
 
 
 def click_mouse(data):
