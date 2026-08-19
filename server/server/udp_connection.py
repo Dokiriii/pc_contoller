@@ -1,4 +1,3 @@
-# server/udp_connection.py
 import socket
 
 
@@ -22,6 +21,7 @@ class UdpConnection:
 
     # Запускает UDP-сервер.
     def start(self):
+
         self.socket.bind(
             (self.host, self.port)
         )
@@ -34,13 +34,20 @@ class UdpConnection:
 
     # Ожидает следующий UDP-пакет.
     def receive(self):
-        data, client_address = self.socket.recvfrom(65535)
 
-        return data.decode("utf-8"), client_address
+        data, client_address = (
+            self.socket.recvfrom(65535)
+        )
+
+        return (
+            data.decode("utf-8"),
+            client_address
+        )
 
 
     # Закрывает UDP-сокет.
     def close(self):
+
         self.socket.close()
 
         print("[UDP] Сервер остановлен")

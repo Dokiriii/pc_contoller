@@ -1,6 +1,11 @@
 # commands/mouse.py
+
 import pyautogui
-from commands.mouse_input import move_mouse as system_move_mouse
+
+from input.mouse_input import (
+    move_mouse as system_move_mouse,
+    scroll_mouse as system_scroll_mouse,
+)
 
 
 def move_mouse(data):
@@ -55,7 +60,7 @@ def scroll_mouse(data):
         print("[Mouse] amount должен быть числом")
         return
 
-    pyautogui.scroll(amount)
+    system_scroll_mouse(amount)
 
 
 mouse_actions = {
@@ -63,5 +68,5 @@ mouse_actions = {
     "click": click_mouse,
     "mouse_down": mouse_down,
     "mouse_up": mouse_up,
-    "scroll": scroll_mouse
+    "scroll": scroll_mouse,
 }
