@@ -32,7 +32,7 @@ def tcp_worker(
         if commands is None:
 
             print(
-                f"Клиент отключился: "
+                f"[TCP] Клиент отключился: "
                 f"{context.client_address}"
             )
 
@@ -62,7 +62,7 @@ def tcp_worker(
                 continue
 
 
-            print("\nСЕРВЕР")
+            print("\n[TCP] СЕРВЕР")
 
             print(
                 f"Пришло от: "
